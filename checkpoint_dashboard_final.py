@@ -9,7 +9,7 @@ import os
 from checkpoint_img import check_img
 import numpy as np
 
-DATA_PATH = 'Data'
+DATA_PATH = '../../Check Point Hackathon'
 df_benign = pd.read_csv(os.path.join(DATA_PATH, 'Train_Benign_Traffic.csv'), encoding='latin1')
 df_detections = pd.read_csv(os.path.join(DATA_PATH, 'Train_Detections.csv'), encoding='latin1')
 df_ips = pd.read_csv(os.path.join(DATA_PATH, 'Train_IPS.csv'), encoding='latin1')
@@ -84,8 +84,7 @@ app.layout = html.Div(
                 dcc.Dropdown(
                     id='type_source',
                     options=[{'label': i, 'value': i} for i in ['Internal', 'External']],
-                    placeholder='Select Type Source',
-                    value='Internal'
+                    placeholder='Select Type Source'
                 ),
             ],
             style={'width': '49%', 'display': 'inline-block'}),
@@ -94,8 +93,7 @@ app.layout = html.Div(
                 dcc.Dropdown(
                     id='type_destination',
                     options=[{'label': i, 'value': i} for i in ['Internal', 'External']],
-                    placeholder='Select Type Destination',
-                    value='Internal'
+                    placeholder='Select Type Destination'   
                 ),
             ], style={'width': '49%', 'float': 'right', 'display': 'inline-block'})
         ], style={
@@ -125,11 +123,11 @@ app.layout = html.Div(
                 ], style={'width': '49%', 'display': 'inline-block', 'padding': '0 20'})  
             ])
         
-# def get_df(df, clients):
-#     if clients == 'All':
-#         return df
-#     else:
-#         return df[df['client'] == int(clients)] 
+def get_df(df, clients):
+    if clients == 'All':
+        return df
+    else:
+        return df[df['client'] == int(clients)] 
 
 
 @app.callback(
@@ -137,18 +135,18 @@ app.layout = html.Div(
     [Input(component_id='client_dropdown', component_property='value')]
     )
 def update_graph(clients):
-    if clients == 'All':
-        sub_df = full_data
-    else:
-        sub_df = full_data[full_data['client'] == int(clients)]
-    # sub_df = get_df(full_data, clients)
+    # if clients == 'All':
+    #     sub_df = full_data
+    # else:
+    #     sub_df = full_data[full_data['client'] == int(clients)]
+    sub_df = get_df(full_data, clients)
     ben_df = sub_df[sub_df['label'] == 'Benign']
     mal_df = sub_df[sub_df['label'] == 'Malicious']
     
     return {
         'data': [go.Histogram(
             x=ben_df.protocol,
-            histnorm='percent',
+            # histnorm='percent',
             name = 'Benign',
             marker={'color':'#054194'},
             opacity=0.75
@@ -156,7 +154,7 @@ def update_graph(clients):
                 ,
                 go.Histogram(
             x=mal_df.protocol,
-            histnorm='percent',
+            # histnorm='percent',
             name = 'Malicious',
             marker={'color':'#f97cce'},
             opacity=0.75,
@@ -164,8 +162,8 @@ def update_graph(clients):
         ,
         'layout': go.Layout(
             title='<b>Protocols: Benign/Malicious</b>',
-            xaxis={'title': 'Protocoles' },
-            yaxis={'title': 'Count'},
+            xaxis={'title': '<i>Protocoles</i>' },
+            yaxis={'title': '<i>Count</i>', 'type': 'log'},
             margin={'l': 70, 'b': 50, 't': 25, 'r': 0},
             height=700,
             bargap=0.2,
@@ -180,15 +178,15 @@ def update_graph(clients):
     )
 def update_graph2(clients):
     # Pie
-    if clients == 'All':
-        sub_df = full_data
-    else:
-        sub_df = full_data[full_data['client'] == int(clients)]
+    # if clients == 'All':
+    #     sub_df = full_data
+    # else:
+    #     sub_df = full_data[full_data['client'] == int(clients)]
     # sub_df = full_data[full_data['client'] == clients]
-    # sub_df = get_df(full_data, clients)
+    sub_df = get_df(full_data, clients)
     ben_df = sub_df[sub_df['label'] == 'Benign']
     mal_df = sub_df[sub_df['label'] == 'Malicious']
-    labels = full_data['dst_port'].unique()
+    labels = full_data['dst_port']
     return {
         'data': [
         go.Pie(
@@ -196,8 +194,8 @@ def update_graph2(clients):
             sort=False,
             direction='clockwise',
             domain={'x': [0.15, 0.85], 'y': [0.15, 0.85]},
-            values=ben_df[ben_df['dst_port'] > 10]['dst_port'],
-            labels = labels,
+            values=ben_df['dst_port'].value_counts().tolist(),
+            labels = ben_df['dst_port'].value_counts().index.tolist(),
             textinfo='label',
             textposition='inside'
                     )
@@ -217,12 +215,8 @@ def update_graph2(clients):
     )
 def update_graph3(clients):
     # Pie
-    if clients == 'All':
-        sub_df = full_data
-    else:
-        sub_df = full_data[full_data['client'] == int(clients)]
-    # sub_df = full_data[full_data['client'] == clients]
-    # sub_df = get_df(full_data, clients)
+
+    sub_df = get_df(full_data, clients)
     ben_df = sub_df[sub_df['label'] == 'Benign']
     mal_df = sub_df[sub_df['label'] == 'Malicious']
     labels = full_data['dst_port'].unique()
@@ -234,10 +228,10 @@ def update_graph3(clients):
             sort=False,
             direction='clockwise',
             domain={'x': [0.15, 0.85], 'y': [0.15, 0.85]},
-            values=mal_df[mal_df['dst_port'] > 10]['dst_port'],
+            values=mal_df['dst_port'].value_counts().tolist(),
             textinfo='label',
             textposition='inside',
-            labels = labels
+            labels = mal_df['dst_port'].value_counts().index.tolist()
                     )
                 ,
                 ]
@@ -284,7 +278,9 @@ def update_graph4(clients, source, destination):
         'layout': go.Layout(
         title='<b>Average of Bytes per Type</b>',
         margin={'l': 70, 'b': 60, 't': 50, 'r': 0},
-        height=450)
+        height=450,
+        xaxis={'title': '<i>Bytes</i>'},
+        yaxis={'title': '<i>Count</i>', 'type':'log' })
         }
 
 @app.callback(
@@ -292,12 +288,12 @@ def update_graph4(clients, source, destination):
     [Input(component_id='client_dropdown', component_property='value')]
     )
 def update_graph5(clients):
-    if clients == 'All':
-        sub_df = full_data
-    else:
-        sub_df = full_data[full_data['client'] == int(clients)]
+    # if clients == 'All':
+    #     sub_df = full_data
+    # else:
+    #     sub_df = full_data[full_data['client'] == int(clients)]
     # sub_df = df_enrich[df_enrich['client'] == clients]
-    # sub_df = get_df(df_enrich, clients)
+    sub_df = get_df(df_enrich, clients)
     ben_df = sub_df[sub_df['label'] == 'benign']
     mal_df = sub_df[sub_df['label'] == 'malicious']
     
@@ -320,13 +316,14 @@ def update_graph5(clients):
         ,
         'layout': go.Layout(
             title='<b>Distribution of Received Bytes</b>',
-            xaxis={'title': 'Bytes' },
-            yaxis={'title': 'Count'},
+            xaxis={'title': '<i>Bytes</i>'},
+            yaxis={'title': '<i>Count</i>', 'type':'log' },
             margin={'l': 70, 'b': 60, 't': 50, 'r': 0},
             height=550,
             bargap=0.2,
             bargroupgap=0.1,
-            barmode='overlay'
+            barmode='overlay',
+            
         )
             }
 
@@ -336,18 +333,18 @@ def update_graph5(clients):
     )
 def update_graph6(clients):
     # sub_df = df_enrich[df_enrich['client'] == clients]
-    # sub_df = get_df(df_enrich, clients)
-    if clients == 'All':
-        sub_df = full_data
-    else:
-        sub_df = full_data[full_data['client'] == int(clients)]
+    sub_df = get_df(df_enrich, clients)
+    # if clients == 'All':
+    #     sub_df = full_data
+    # else:
+    #     sub_df = full_data[full_data['client'] == int(clients)]
     ben_df = sub_df[sub_df['label'] == 'benign']
     mal_df = sub_df[sub_df['label'] == 'malicious']
     
     return {
         'data': [go.Histogram(
             x=ben_df.sent_bytes,
-            histnorm='percent',
+            # histnorm='percent',
             name = 'Benign',
             marker={'color':'#054194'},
             opacity=0.75
@@ -355,7 +352,7 @@ def update_graph6(clients):
                 ,
                 go.Histogram(
             x=mal_df.sent_bytes,
-            histnorm='percent',
+            # histnorm='percent',
             name = 'Malicious',
             marker={'color':'#f97cce'},
             opacity=0.75
@@ -363,8 +360,8 @@ def update_graph6(clients):
         ,
         'layout': go.Layout(
             title='<b>Distribution of Sent Bytes</b>',
-            xaxis={'title': 'Bytes' },
-            yaxis={'title': 'Count'},
+            xaxis={'title': '<i>Bytes</i>'},
+            yaxis={'title': '<i>Count</i>', 'type':'log'},
             margin={'l': 70, 'b': 60, 't': 50, 'r': 0},
             height=550,
             bargap=0.2,
