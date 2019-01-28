@@ -9,7 +9,7 @@ import os
 from checkpoint_img import check_img
 import numpy as np
 
-DATA_PATH = '../Data'
+DATA_PATH = 'Data'
 df_benign = pd.read_csv(os.path.join(DATA_PATH, 'Train_Benign_Traffic.csv'), encoding='latin1')
 df_detections = pd.read_csv(os.path.join(DATA_PATH, 'Train_Detections.csv'), encoding='latin1')
 df_ips = pd.read_csv(os.path.join(DATA_PATH, 'Train_IPS.csv'), encoding='latin1')
